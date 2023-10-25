@@ -10,6 +10,24 @@ def initialize_deck():
     return deck
 
 
+def calculate_score(hand):
+    score = 0
+    aces = 0
+
+    for card in hand:
+        rank = card.split()[0]
+        if rank == 'A':
+            aces += 1
+        else:
+            score += 10 if rank in ['K', 'Q', 'J'] else int(rank)
+
+    while aces > 0 and score + 11 <= 21:
+        score += 11
+        aces -= 1
+
+    return score
+
+
 class BlackjackGame:
     def __init__(self):
         self.deck = initialize_deck()
@@ -32,26 +50,9 @@ class BlackjackGame:
 
     def is_game_over(self):
         for hand in self.player_hands:
-            if self.calculate_score(hand) > 21:
+            if calculate_score(hand) > 21:
                 return True
         return False
-
-    def calculate_score(self, hand):
-        score = 0
-        aces = 0
-
-        for card in hand:
-            rank = card.split()[0]
-            if rank == 'A':
-                aces += 1
-            else:
-                score += 10 if rank in ['K', 'Q', 'J'] else int(rank)
-
-        while aces > 0 and score + 11 <= 21:
-            score += 11
-            aces -= 1
-
-        return score
 
     def get_game_state(self):
         return {
@@ -59,3 +60,23 @@ class BlackjackGame:
             'current_player': self.current_player,
             'is_game_over': self.is_game_over()
         }
+
+    def determine_game_result(self):
+        player_scores = [calculate_score(hand) for hand in self.player_hands]
+        dealer_score = calculate_score(self.dealer_hand)
+
+        results = []
+
+        for score in player_scores:
+            if score > 21:
+                results.append("Bust")
+            elif dealer_score > 21 or (score == 21 and len(self.player_hands[0]) == 2):
+                results.append("Win")
+            elif score > dealer_score:
+                results.append("Win")
+            elif score == dealer_score:
+                results.append("Push")
+            else:
+                results.append("Lose")
+
+        return results
