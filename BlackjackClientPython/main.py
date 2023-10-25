@@ -19,21 +19,20 @@ if response == "pong":
     # Connection is established, proceed with the interaction
     print("Connection established. Proceed with the game.")
 
-    # Main game loop
     while True:
-        # Receive and display the game state from the server
+        # Receive the game state from the server
         game_state = client.recv(1024).decode()
-        print("Game State:", game_state)
 
-        # Check if it's the player's turn (you can modify this based on your game's logic)
-        if "Your Turn" in game_state:
-            action = input("Enter your action (hit or stand): ")
-            client.send(action.encode())
+        if game_state:
+            print("Game State:", game_state)
 
-        # Check if the game is over
-        if "Game Over" in game_state:
-            print("Game Over. Thank you for playing!")
-            break
+            if "Your Turn" in game_state:
+                action = input("Enter your action (hit or stand): ")
+                client.send(action.encode())
+
+            if "Game Over" in game_state:
+                print("Game Over. Thank you for playing!")
+                break
 
     # Close the client socket when the game is finished
     client.close()
