@@ -36,31 +36,31 @@ blackjack_game.start_game()
 # Start the game
 blackjack_game.start_game()
 
-while not blackjack_game.is_game_over():
+# Start the game
+blackjack_game.start_game()
+while not blackjack_game.check_game_over():
     for addr, player in connected_clients.items():
         game_state = blackjack_game.get_game_state()
 
-        # Send the game state to the current player
-        player.send(str(game_state).encode())
+        # Wait for the current player's action
+        action = player.recv(1024).decode()
+        # Process the player's action and update the game state
+        blackjack_game.player_action(action)
 
-        if not game_state['is_game_over'] and game_state['current_player'] == connected_clients[addr]:
-            # Wait for the current player's action
-            action = player.recv(1024).decode()
+        # Send the game state to both players after a player's action
+        for player in connected_clients.values():
+            player.send(str(game_state).encode())
 
-            # Process the player's action and update the game state
-            blackjack_game.player_action(action)
-
-        # Check if the game is over after each player's action
-        if blackjack_game.is_game_over():
-            break
-
-    # Determine the game result when the game is over
+    # Check if the game is over after each player's action
     if blackjack_game.is_game_over():
-        game_results = blackjack_game.determine_game_result()
-        for addr, player in connected_clients.items():
-            player_index = list(connected_clients.keys()).index(addr)
-            result_message = f"Game Result: {game_results[player_index]}"
-            player.send(result_message.encode())
+        break
+
+# Determine the game result when the game is over
+game_results = blackjack_game.determine_game_result()
+for addr, player in connected_clients.items():
+    player_index = list(connected_clients.keys()).index(addr)
+    result_message = f"Game Result: {game_results[player_index]}"
+    player.send(result_message.encode())
 
 # Close the server when the game is finished
 server.close()
