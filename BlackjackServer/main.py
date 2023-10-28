@@ -1,7 +1,5 @@
 import socket
 
-from BlackJack.black_jack_game import BlackjackGame
-
 
 def main():
     # Initialize the server socket
