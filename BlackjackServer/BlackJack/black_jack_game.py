@@ -103,7 +103,7 @@ class Blackjack:
 
         return dealer_score, winning_players
 
-    def take_turn(self, player, action):
+    def take_turn(self, player):
         while True:
             action = input(f"{player.name}, do you want to (h)it or (s)tand? ").lower()
             if action == 'h':
