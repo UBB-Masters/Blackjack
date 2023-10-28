@@ -71,11 +71,11 @@ class Deck:
 
 
 class Blackjack:
-    def __init__(self):
-        self.players = [Player(input("Player 1, say your name: ")), Player(input("Player 2, say your name: "))]
+    def __init__(self, players):
+        self.players = players
         self.dealer = Dealer()
         self.deck = Deck()
-        self.deck.players = self.players
+        self.deck.players = players
 
     def play_game(self):
         for _ in range(2):
@@ -85,11 +85,11 @@ class Blackjack:
 
         for player in self.players:
             print(player, player.get_score())
+
         print(self.dealer, self.dealer.get_score())
 
         for player in self.players:
             self.take_turn(player)
-            print(player)
 
         self.dealer_turn()
         print(self.dealer)
@@ -99,15 +99,9 @@ class Blackjack:
                 print(f"{player.name} busted!")
 
         dealer_score = self.dealer.get_score()
-        winning_players = [player for player in self.players if
-                           player.get_score() <= 21 and player.get_score() > dealer_score]
+        winning_players = [player for player in self.players if 21 >= player.get_score() > dealer_score]
 
-        if dealer_score <= 21 and not winning_players:
-            print("Dealer is the overall winner!")
-        elif winning_players:
-            print("The following players win:")
-            for player in winning_players:
-                print(player.name)
+        return dealer_score, winning_players
 
     def take_turn(self, player):
         while True:
@@ -129,5 +123,15 @@ class Blackjack:
 
 
 if __name__ == "__main__":
-    game = Blackjack()
-    game.play_game()
+    num_players = 2
+    players = [Player(input(f"Player {i}, say your name: ")) for i in range(1, num_players + 1)]
+    game = Blackjack(players)
+
+    dealer_score, winning_players = game.play_game()
+
+    if dealer_score <= 21 and not winning_players:
+        print("Dealer is the overall winner!")
+    elif winning_players:
+        print("The following players win:")
+        for player in winning_players:
+            print(player.name)
