@@ -32,6 +32,7 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+        self.balance = 100  # Initial balance for the player
 
     def get_score(self):
         total = sum(card.value for card in self.hand)
@@ -43,6 +44,18 @@ class Player:
 
     def __str__(self):
         return f"{self.name}'s Hand: [{', '.join(map(str, self.hand))}]"
+
+    def split_hand(self):
+        return len(self.hand) == 2 and self.hand[0].value == self.hand[1].value
+
+    def double_down(self, bet):
+        self.balance -= bet
+        return bet * 2
+
+    def take_insurance(self, bet):
+        self.balance -= bet / 2
+        return bet * 1.5 if self.hand[0].value == 11 else 0
+
 
 
 class Dealer:
@@ -70,6 +83,7 @@ class Deck:
         return self.cards.pop()
 
 
+
 class Blackjack:
     def __init__(self, players):
         self.players = players
@@ -78,40 +92,65 @@ class Blackjack:
         self.deck.players = players
 
     def play_game(self):
-        for _ in range(2):
+        round_number = 1
+        round_winners = []
+        while any(player.balance > 0 for player in self.players):  # Continue until at least one player has a positive balance
+            print(f"\n--- Round {round_number} ---")
             for player in self.players:
-                player.hand.append(self.deck.deal_card())
-            self.dealer.hand.append(self.deck.deal_card())
+                if player.balance <= 0:
+                    print(f"{player.name}, you are out of chips!")
+                    continue
 
-        for player in self.players:
-            print(player, player.get_score())
+                print(f"\n{player.name}, your balance: ${player.balance}")
+                bet = int(input("Place your bet: "))
+                if bet > player.balance:
+                    print("Bet cannot exceed your balance.")
+                    continue
 
-        print(self.dealer, self.dealer.get_score())
+                for _ in range(2):
+                    player.hand.append(self.deck.deal_card())
+                    self.dealer.hand.append(self.deck.deal_card())
 
-        for player in self.players:
-            self.take_turn(player)
+                print(player, player.get_score())
+                print(self.dealer, self.dealer.get_score())
 
-        self.dealer_turn()
-        print(self.dealer)
+                self.take_turn(player)
 
-        for player in self.players:
-            if player.get_score() > 21:
-                print(f"{player.name} busted!")
+                self.dealer_turn()
+                print(self.dealer)
 
+                player_score = player.get_score()
+                dealer_score = self.dealer.get_score()
+
+                if player_score > 21:
+                    print(f"{player.name} busted!")
+                    player.balance -= bet
+                elif dealer_score > 21 or player_score > dealer_score:
+                    print(f"{player.name} wins this round!")
+                    player.balance += bet
+                else:
+                    print("Dealer wins this round!")
+
+                if player_score <= 21 and (dealer_score > 21 or player_score > dealer_score):
+                    round_winners.append(player)
+
+                player.hand.clear()
+                self.dealer.hand.clear()
+
+            round_number += 1
+            choice = input("Do you want to continue playing? (y/n): ")
+            if choice.lower() != 'y':
+                break
+        winning_players = list(set(round_winners))
         dealer_score = self.dealer.get_score()
-        winning_players = [player for player in self.players if 21 >= player.get_score() > dealer_score]
-
         return dealer_score, winning_players
 
     def take_turn(self, player):
-        while True:
+        while player.get_score() < 21:
             action = input(f"{player.name}, do you want to (h)it or (s)tand? ").lower()
             if action == 'h':
                 player.hand.append(self.deck.deal_card())
                 print(player, player.get_score())
-                if player.get_score() > 21:
-                    print(f"{player.name} busted!")
-                    break
             elif action == 's':
                 break
             else:
@@ -121,7 +160,6 @@ class Blackjack:
         while self.dealer.get_score() < 17:
             self.dealer.hand.append(self.deck.deal_card())
 
-
 if __name__ == "__main__":
     num_players = 2
     players = [Player(input(f"Player {i}, say your name: ")) for i in range(1, num_players + 1)]
@@ -129,9 +167,12 @@ if __name__ == "__main__":
 
     dealer_score, winning_players = game.play_game()
 
-    if dealer_score <= 21 and not winning_players:
-        print("Dealer is the overall winner!")
-    elif winning_players:
-        print("The following players win:")
-        for player in winning_players:
-            print(player.name)
+    if dealer_score is not None and winning_players is not None:
+        if dealer_score <= 21 and not winning_players:
+            print("Dealer is the overall winner!")
+        elif winning_players:
+            print("The following players win:")
+            for player in winning_players:
+                print(player.name)
+    else:
+        print("Game terminated early.")

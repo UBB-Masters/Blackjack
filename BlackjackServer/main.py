@@ -1,21 +1,17 @@
-
 import socket
 import pickle
 import threading
-from BlackjackServer.BlackJack.black_jack_game import Blackjack, Player, Dealer, Deck
-
-
 
 def handle_client(client):
-    # Initialize the game for the client
-    num_players = 2
-    players = [Player(input(f"Player {i}, say your name: ")) for i in range(1, num_players + 1)]
-    game = Blackjack(players)
+    data = client.recv(1024)
+    try:
+        game_result = pickle.loads(data)
+        # Process the game result received from the client
+        print("Dealer's Score:", game_result[0])
+        print("Winning Players:", game_result[1])
+    except pickle.UnpicklingError as e:
+        print("Error receiving and processing the game result:", e)
 
-    dealer_score, winning_players = game.play_game()
-
-    game_result = (dealer_score, [player.name for player in winning_players])
-    client.send(pickle.dumps(game_result))  # Send game results to the client
     client.close()
 
 def main():
