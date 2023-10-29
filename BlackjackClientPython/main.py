@@ -1,38 +1,24 @@
+
 import socket
+import pickle
 
-# Define the server's IP address and port
-server_ip = '10.152.0.236'  # Replace with the actual server IP address
-server_port = 9999  # Use the same port as the server
 
-# Create a socket to connect to the server
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((server_ip, server_port))
+def game_client():
+    server_ip = '127.0.0.1'
+    server_port = 9999
 
-# Send a single "ping" to the server to establish the connection
-client.send("ping".encode())
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((server_ip, server_port))
 
-# Receive and display the response (pong)
-response = client.recv(1024).decode()
-print("Received:", response)
+    # Receive game results from the server
+    game_result = client.recv(1024)
+    dealer_score, winning_players = pickle.loads(game_result)
 
-if response == "pong":
-    # Connection is established, proceed with the interaction
-    print("Connection established. Proceed with the game.")
+    print("Dealer's Score:", dealer_score)
+    print("Winning Players:", winning_players)
 
-    while True:
-        # Receive the game state from the server
-        game_state = client.recv(1024).decode()
-
-        if game_state:
-            print("Game State:", game_state)
-
-            if "Your Turn" in game_state:
-                action = input("Enter your action (hit or stand): ")
-                client.send(action.encode())
-
-            if "Game Over" in game_state:
-                print("Game Over. Thank you for playing!")
-                break
-
-    # Close the client socket when the game is finished
     client.close()
+
+
+if __name__ == "__main__":
+    game_client()
