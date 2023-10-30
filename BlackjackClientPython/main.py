@@ -64,41 +64,89 @@
 #
 # if __name__ == "__main__":
 #     game_client()
+
+# ====== THIS IS FOR JAVA =======
+# import socket
+# from BlackjackServer.BlackJack.black_jack_game import Blackjack, Player
+#
+# def game_client(player_number):
+#     if player_number == 1:
+#         player_name = input("Player 1, say your name: ")
+#     elif player_number == 2:
+#         player_name = input("Player 2, say your name: ")
+#     else:
+#         print("Invalid player number.")
+#         return
+#
+#     # Initialize the game for the player
+#     player_names = [player_name]
+#     players = [Player(name) for name in player_names]
+#     game = Blackjack(players)
+#
+#     dealer_score, winning_players = game.play_game()
+#     game_result = f"Dealer's Score: {dealer_score}, Winning Players: {[player.name for player in winning_players]}"
+#
+#     send_data_to_server(f"Player {player_number}", game_result)
+#
+# def send_data_to_server(player_id, game_result):
+#     server_ip = '127.0.0.1'  # Replace with the IP address of the server
+#     # server_ip = '10.152.4.197'  # Replace with the IP address of the server
+#
+#     server_port = 9999  # The same port as the server
+#
+#     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     client.connect((server_ip, server_port))
+#
+#     data_to_send = player_id + '\n' + game_result  # Concatenating data
+#     client.sendall(data_to_send.encode())  # Send the combined data to the server
+#
+#     client.close()
+#
+# if __name__ == "__main__":
+#     player_number = int(input("Enter the player number (1 or 2): "))
+#     game_client(player_number)
+
+
+# =====THIS IS FOR RUST WITH JSON======
+
 import socket
+import json
+import sys
 from BlackjackServer.BlackJack.black_jack_game import Blackjack, Player
 
+
 def game_client(player_number):
-    if player_number == 1:
-        player_name = input("Player 1, say your name: ")
-    elif player_number == 2:
-        player_name = input("Player 2, say your name: ")
-    else:
-        print("Invalid player number.")
-        return
+    try:
+        player_name = input(f"Player {player_number}, say your name: ")
 
-    # Initialize the game for the player
-    player_names = [player_name]
-    players = [Player(name) for name in player_names]
-    game = Blackjack(players)
+        player_names = [player_name]
+        players = [Player(name) for name in player_names]
+        game = Blackjack(players)
 
-    dealer_score, winning_players = game.play_game()
-    game_result = f"Dealer's Score: {dealer_score}, Winning Players: {[player.name for player in winning_players]}"
+        dealer_score, winning_players = game.play_game()
+        game_result = {"Dealer's Score": dealer_score, "Winning Players": [player.name for player in winning_players]}
 
-    send_data_to_server(f"Player {player_number}", game_result)
+        send_data_to_server(f"Player {player_number}", game_result)
+    except ConnectionRefusedError:
+        print("Server is full. No more players can join.")
+
 
 def send_data_to_server(player_id, game_result):
     server_ip = '127.0.0.1'  # Replace with the IP address of the server
     server_port = 9999  # The same port as the server
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((server_ip, server_port))
 
-    data_to_send = player_id + '\n' + game_result  # Concatenating data
-    client.sendall(data_to_send.encode())  # Send the combined data to the server
+    try:
+        client.connect((server_ip, server_port))
+        data_to_send = json.dumps({"player_id": player_id, "game_result": game_result})
+        client.sendall(data_to_send.encode())
+    except ConnectionRefusedError:
+        raise ConnectionRefusedError
 
     client.close()
+
 
 if __name__ == "__main__":
     player_number = int(input("Enter the player number (1 or 2): "))
     game_client(player_number)
-
