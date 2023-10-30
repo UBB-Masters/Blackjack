@@ -38,7 +38,14 @@ import threading
 
 def handle_client(client):
     data = client.recv(1024)
-    print(data.decode())  # Display the game result received from the client
+    try:
+        game_result = pickle.loads(data)
+        # Process the game result received from the client
+        print("Dealer's Score:", game_result[0])
+        print("Winning Players:", game_result[1])
+    except pickle.UnpicklingError as e:
+        print("Error receiving and processing the game result:", e)
+
     client.close()
 
 def main():

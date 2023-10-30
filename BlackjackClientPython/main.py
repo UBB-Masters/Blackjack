@@ -27,6 +27,7 @@ import pickle
 from BlackjackServer.BlackJack.black_jack_game import Blackjack, Player
 
 def game_client():
+    # server_ip = '10.152.4.197'  # Replace with the IP address of the server
     server_ip = '127.0.0.1'  # Replace with the IP address of the server
     server_port = 9999  # The same port as the server
 
